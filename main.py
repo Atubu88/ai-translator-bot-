@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
+from aiogram.filters import Command
+from aiogram import Router
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 import asyncio
@@ -18,12 +20,16 @@ if not TOKEN:
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+# Создаём роутер для регистрации обработчиков
+router = Router()
 
 # Обработчик команды /start
-@dp.message_handler(commands=["start"])
+@router.message(Command("start"))
 async def send_welcome(message: Message):
     await message.answer("Привет! Это бот с вебхуком.")
 
+# Добавляем роутер в диспетчер
+dp.include_router(router)
 
 # Включение вебхуков
 async def on_startup(app: web.Application):
@@ -31,11 +37,9 @@ async def on_startup(app: web.Application):
     await bot.set_webhook(webhook_url)
     print(f"Вебхук установлен: {webhook_url}")
 
-
 async def on_shutdown(app: web.Application):
     await bot.delete_webhook()
     print("Вебхук удалён")
-
 
 # Основная функция для запуска веб-сервера
 async def main():
@@ -52,7 +56,6 @@ async def main():
 
     print("Бот запущен и готов к приёму вебхуков.")
     await asyncio.Event().wait()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
