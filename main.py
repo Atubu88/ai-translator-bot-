@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os
 import asyncio
 
+from starlette.responses import JSONResponse
+
 from handlers.chat_handler import router as handlers_router  # Убедитесь, что путь верен
 from services.openai_service import translate_text  # Убедитесь, что путь верен
 
@@ -57,4 +59,4 @@ async def webhook_handler(request: Request):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}
+    return JSONResponse(content={"message": "Hello, this is the aiogram Telegram bot webhook endpoint."})
