@@ -8,7 +8,19 @@
   ],
   "routes": [
     {
+      "src": "/webhook",
+      "methods": ["POST"],
+      "dest": "main.py"
+    },
+    {
+      "src": "/",
+      "methods": ["GET"],
+      "dest": "main.py"
+    },
+    {
       "src": "/(.*)",
+      "methods": ["GET"],
+      "status": 404,
       "dest": "main.py"
     }
   ]
