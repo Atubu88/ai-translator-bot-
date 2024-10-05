@@ -1,69 +1,43 @@
 import os
 from dotenv import load_dotenv
+from flask import Flask, request
 from aiogram import Bot, Dispatcher
-from aiogram.types import Message
-from aiogram.filters import Command
-from aiogram import Router
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web
-import asyncio
+from aiogram.types import Update
 
-# Загружаем переменные окружения из файла .env
+# Загружаем переменные окружения из .env
 load_dotenv()
 
 # Получаем токен бота
 TOKEN = os.getenv("BOT_TOKEN")
-
 if not TOKEN:
     raise ValueError("Токен бота не найден!")
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot)
 
-# Создаём роутер для регистрации обработчиков
-router = Router()
+# Создаем Flask-приложение
+app = Flask(__name__)
 
 # Обработчик команды /start
-@router.message(Command("start"))
-async def send_welcome(message: Message):
+@dp.message_handler(commands=["start"])
+async def send_welcome(message):
     await message.answer("Привет! Это бот с вебхуком.")
 
-# Добавляем роутер в диспетчер
-dp.include_router(router)
+# Роут для вебхуков Telegram
+@app.route(f"/webhook/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(), bot)
+    Dispatcher.set_current(dp)
+    bot.set_current(bot)
+    dp.process_update(update)
+    return "OK", 200
 
-# Включение вебхуков
-async def on_startup(app: web.Application):
-    webhook_url = f"https://<твой-домен>.vercel.app/webhook/{TOKEN}"
-    await bot.set_webhook(webhook_url)
-    print(f"Вебхук установлен: {webhook_url}")
-
-async def on_shutdown(app: web.Application):
-    await bot.delete_webhook()
-    print("Вебхук удалён")
-
-# Основная функция для запуска веб-сервера
-# Основная функция для запуска веб-сервера
-async def main():
-    app = web.Application()  # Создание веб-приложения
-    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=f"/webhook/{TOKEN}")
-
-    app.on_startup.append(on_startup)
-    app.on_shutdown.append(on_shutdown)
-
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
-    await site.start()
-
-    print("Бот запущен и готов к приёму вебхуков.")
-    await asyncio.Event().wait()
-
-# Экспорт приложения `app` для Vercel
-app = web.Application()  # Приложение должно быть доступно как глобальная переменная
-SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=f"/webhook/{TOKEN}")
-app.on_startup.append(on_startup)
-app.on_shutdown.append(on_shutdown)
-
+# Установка вебхука при запуске
+@app.before_first_request
+def setup_webhook():
+    webhook_url = f"https://{os.getenv('VERCEL_URL')}/webhook/{TOKEN}"
+    bot.set_webhook(webhook_url)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Запуск Flask-приложения
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
