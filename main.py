@@ -1,55 +1,66 @@
-import os
-import asyncio
-from dotenv import load_dotenv
-from flask import Flask, request
+# main.py
+import logging
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
+from aiogram.dispatcher.router import Router
+import aiohttp
+from aiohttp import web
+from dotenv import load_dotenv
+import os
+import asyncio
 
-# Загружаем переменные окружения из .env
+from handlers.chat_handler import router as handlers_router  # Импортируем роутер из handlers.py
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Загрузка переменных окружения
 load_dotenv()
+API_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Например: https://your-domain.vercel.app/webhook
 
-# Получаем токен бота
-TOKEN = os.getenv("BOT_TOKEN")
-if not TOKEN:
-    raise ValueError("Токен бота не найден!")
+if not API_TOKEN or not WEBHOOK_URL:
+    logger.error("Необходимо установить переменные окружения BOT_TOKEN и WEBHOOK_URL")
+    exit(1)
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+# Инициализируем бота и диспетчер
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher()
+dp.include_router(handlers_router)
 
-# Создаем Flask-приложение
-app = Flask(__name__)
+async def handle(request):
+    if request.method == "POST":
+        try:
+            data = await request.json()
+            update = Update(**data)
+            Dispatcher.set_current(dp)
+            Bot.set_current(bot)
+            await dp.process_update(update)
+            return web.Response(status=200)
+        except Exception as e:
+            logger.exception(f"Ошибка при обработке webhook: {e}")
+            return web.Response(status=500)
+    else:
+        return web.Response(status=405)
 
+async def on_startup(app):
+    await bot.set_webhook(WEBHOOK_URL)
+    logger.info(f"Webhook установлен на {WEBHOOK_URL}")
 
-# Обработчик команды /start
-@dp.message_handler(commands=["start"])
-async def send_welcome(message):
-    await message.answer("Привет! Это бот с вебхуком.")
+async def on_shutdown(app):
+    await bot.delete_webhook()
+    await bot.session.close()
+    logger.info("Webhook удалён и бот остановлен")
 
+def create_app():
+    app = web.Application()
+    app.router.add_post('/webhook', handle)
+    app.on_startup.append(on_startup)
+    app.on_shutdown.append(on_shutdown)
+    return app
 
-# Роут для вебхуков Telegram
-@app.route(f"/webhook/{TOKEN}", methods=["POST"])
-def webhook():
-    update = Update.de_json(request.get_json(), bot)
-    Dispatcher.set_current(dp)
-    bot.set_current(bot)
-
-    # Используем asyncio для вызова асинхронной функции
-    asyncio.run(dp.process_update(update))
-    return "OK", 200
-
-
-# Установка вебхука при старте приложения
-async def setup_webhook():
-    webhook_url = f"https://{os.getenv('VERCEL_URL')}/webhook/{TOKEN}"
-    await bot.set_webhook(webhook_url)
-
-
-@app.before_first_request
-def initialize():
-    # Запускаем установку вебхука в отдельном событии asyncio
-    asyncio.run(setup_webhook())
-
-
-if __name__ == "__main__":
-    # Запуск Flask-приложения
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+if __name__ == '__main__':
+    app = create_app()
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=int(os.getenv("PORT", 8000)))
