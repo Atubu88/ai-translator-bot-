@@ -42,8 +42,9 @@ async def on_shutdown(app: web.Application):
     print("Вебхук удалён")
 
 # Основная функция для запуска веб-сервера
+# Основная функция для запуска веб-сервера
 async def main():
-    app = web.Application()
+    app = web.Application()  # Создание веб-приложения
     SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=f"/webhook/{TOKEN}")
 
     app.on_startup.append(on_startup)
@@ -56,6 +57,13 @@ async def main():
 
     print("Бот запущен и готов к приёму вебхуков.")
     await asyncio.Event().wait()
+
+# Экспорт приложения `app` для Vercel
+app = web.Application()  # Приложение должно быть доступно как глобальная переменная
+SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=f"/webhook/{TOKEN}")
+app.on_startup.append(on_startup)
+app.on_shutdown.append(on_shutdown)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

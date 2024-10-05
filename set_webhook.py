@@ -1,14 +1,14 @@
-import os
 import requests
+import os
 from dotenv import load_dotenv
 
-# Загрузка переменных из файла .env
+# Загрузка переменных окружения из файла .env
 load_dotenv()
 
-# Получение токена Telegram бота
+# Получение токена бота
 TOKEN = os.getenv("BOT_TOKEN")
 
-# Формирование URL для вебхука
+# URL для вебхука с использованием домена от Vercel
 WEBHOOK_URL = f"https://ai-translator-bot.vercel.app/webhook/{TOKEN}"
 
 # Установка вебхука через Telegram API
