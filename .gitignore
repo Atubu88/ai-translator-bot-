@@ -1,0 +1,30 @@
+# Виртуальная среда
+venv/
+ENV/
+env/
+
+# Конфигурации IDE
+.idea/
+.vscode/
+
+# Переменные окружения
+.env
+
+# Компилированные файлы Python
+__pycache__/
+*.pyc
+
+# Логи
+*.log
+
+# Кэш и временные файлы
+tmp/
+celerybeat-schedule
+
+# Настройки Heroku (если используются)
+*.sqlite3
+*.pid
+
+# PyCharm специфичные файлы
+.idea/
+*.iml
