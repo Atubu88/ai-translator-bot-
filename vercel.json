@@ -13,8 +13,15 @@
       "dest": "main.py"
     },
     {
+      "src": "/",
+      "methods": ["GET"],
+      "dest": "/main.py"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/webhook"
+      "methods": ["GET"],
+      "status": 404,
+      "dest": "/main.py"
     }
   ]
 }
