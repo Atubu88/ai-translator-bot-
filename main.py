@@ -14,11 +14,13 @@ TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("Токен бота не найден!")
 
-# Создаем объекты бота и диспетчера
+# Создаем объект бота
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
 
-# Включаем роутер, который был импортирован из handlers.chat_handler
+# Создаем объект диспетчера
+dp = Dispatcher()
+
+# Включаем роутер
 dp.include_router(router)
 
 # Создаем Flask-приложение
