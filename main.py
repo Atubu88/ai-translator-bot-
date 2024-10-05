@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from flask import Flask, request
 from aiogram import Bot, Dispatcher
 from aiogram.types import Update
-from handlers.chat_handler import router  # Импортируем роутер
 
 # Загружаем переменные окружения из .env
 load_dotenv()
@@ -14,17 +13,17 @@ TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("Токен бота не найден!")
 
-# Создаем объект бота
 bot = Bot(token=TOKEN)
-
-# Создаем объект диспетчера
-dp = Dispatcher()
-
-# Включаем роутер
-dp.include_router(router)
+dp = Dispatcher(bot)
 
 # Создаем Flask-приложение
 app = Flask(__name__)
+
+
+# Обработчик команды /start
+@dp.message_handler(commands=["start"])
+async def send_welcome(message):
+    await message.answer("Привет! Это бот с вебхуком.")
 
 
 # Роут для вебхуков Telegram
@@ -39,13 +38,16 @@ def webhook():
     return "OK", 200
 
 
-# Установка вебхука при запуске
-@app.before_first_request
-def setup_webhook():
+# Установка вебхука при старте приложения
+async def setup_webhook():
     webhook_url = f"https://{os.getenv('VERCEL_URL')}/webhook/{TOKEN}"
+    await bot.set_webhook(webhook_url)
 
-    # Устанавливаем вебхук асинхронно
-    asyncio.run(bot.set_webhook(webhook_url))
+
+@app.before_first_request
+def initialize():
+    # Запускаем установку вебхука в отдельном событии asyncio
+    asyncio.run(setup_webhook())
 
 
 if __name__ == "__main__":
