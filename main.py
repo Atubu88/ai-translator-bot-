@@ -6,8 +6,8 @@ from fastapi import FastAPI, Request, Response
 from dotenv import load_dotenv
 import os
 import asyncio
+from fastapi.responses import JSONResponse
 
-from starlette.responses import JSONResponse
 
 from handlers.chat_handler import router as handlers_router  # Убедитесь, что путь верен
 from services.openai_service import translate_text  # Убедитесь, что путь верен
