@@ -57,8 +57,11 @@ async def webhook_handler(request: Request):
         logger.exception(f"Ошибка при обработке webhook: {e}")
         return Response(status_code=500)
 
+from fastapi.responses import JSONResponse
+
 @app.get("/")
 async def root():
-    return {"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}, 200, {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json"}
+    return JSONResponse(content={"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}, headers=headers)
 
 
