@@ -1,3 +1,4 @@
+# services/openai_service.py
 import aiohttp
 import os
 from dotenv import load_dotenv
@@ -13,7 +14,6 @@ load_dotenv()
 
 # Устанавливаем API-ключ OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
 
 @cached(ttl=3600, cache=Cache.MEMORY)
 async def translate_text(text: str, target_language: str) -> str:
@@ -46,7 +46,7 @@ async def translate_text(text: str, target_language: str) -> str:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=data) as resp:
-                logger.info(f"OpenAI API responded with status: {resp.status}")
+                logger.info(f"OpenAI API ответил статусом: {resp.status}")
                 if resp.status == 200:
                     response = await resp.json()
                     translated_text = response['choices'][0]['message']['content'].strip()
@@ -57,5 +57,5 @@ async def translate_text(text: str, target_language: str) -> str:
                     logger.error(error_text)
                     return f"Произошла ошибка: {error_text}"
     except Exception as e:
-        logger.exception(f"Unexpected error: {e}")
+        logger.exception(f"Неожиданная ошибка: {e}")
         return f"Произошла ошибка: {str(e)}"

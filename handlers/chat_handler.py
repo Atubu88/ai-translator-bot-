@@ -1,3 +1,4 @@
+# handlers/chat_handler.py
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
@@ -11,22 +12,16 @@ router = Router()
 # Настройка логирования
 logger = logging.getLogger(__name__)
 
-
 def is_cyrillic(text: str) -> bool:
     """
     Проверяет, содержит ли текст кириллические символы.
-
-    :param text: Текст для проверки.
-    :return: True, если текст содержит кириллические символы, иначе False.
     """
     return bool(re.search('[а-яА-Я]', text))
-
 
 @router.message(Command("start"))
 async def cmd_start(message: Message):
     await message.answer(
         "👋 Привет! Я бот-переводчик. Отправь мне текст на русском или английском, и я переведу его для тебя.")
-
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
@@ -38,7 +33,6 @@ async def cmd_help(message: Message):
                          "Бот: \"How are you?\"\n\n"
                          "Пользователь: \"How are you?\"\n"
                          "Бот: \"Как дела?\"")
-
 
 @router.message()
 async def handle_message(message: Message):
