@@ -5,12 +5,9 @@ from aiogram.types import Update
 from fastapi import FastAPI, Request, Response
 from dotenv import load_dotenv
 import os
-import asyncio
-from fastapi.responses import JSONResponse
 
-
-from handlers.chat_handler import router as handlers_router  # Убедитесь, что путь верен
-from services.openai_service import translate_text  # Убедитесь, что путь верен
+from handlers.chat_handler import router as handlers_router
+from services.openai_service import translate_text
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Загрузка переменных окружения
 load_dotenv()
 API_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Например: https://ваш-домен.vercel.app/webhook
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Например: https://your-domain.vercel.app/webhook
 
 if not API_TOKEN or not WEBHOOK_URL:
     logger.error("Необходимо установить переменные окружения BOT_TOKEN и WEBHOOK_URL")
@@ -57,11 +54,6 @@ async def webhook_handler(request: Request):
         logger.exception(f"Ошибка при обработке webhook: {e}")
         return Response(status_code=500)
 
-from fastapi.responses import JSONResponse
-
 @app.get("/")
 async def root():
-    headers = {"Content-Type": "application/json"}
-    return JSONResponse(content={"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}, headers=headers)
-
-
+    return {"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}
