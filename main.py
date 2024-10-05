@@ -59,5 +59,6 @@ async def webhook_handler(request: Request):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}, {"Content-Type": "application/json"}
+    return {"message": "Hello, this is the aiogram Telegram bot webhook endpoint."}, 200, {"Content-Type": "application/json"}
+
 
